@@ -141,6 +141,17 @@ def copy_table_selection(table_view):
     return len(indexes)
 
 # CALENDAR DIALOG --------------------------------------------------
+def ultima_sexta():
+    hoje = date.today()
+    dia_da_semana = hoje.weekday()
+
+    dias_atras = (dia_da_semana - 4 + 7) % 7
+    
+    if dias_atras == 0:
+        dias_atras = 7
+
+    sexta = hoje - timedelta(days=dias_atras)
+    return sexta
 
 class DateRangeDialog(QDialog):
     def __init__(self, parent=None):
@@ -176,7 +187,11 @@ class DateRangeDialog(QDialog):
         layout.addWidget(buttons)
         
         # Define data inicial como 7 dias atrás
-        semana_atras = date.today() - timedelta(days=7)
+        #semana_atras = date.today() - timedelta(days=7)
+        semana_atras = ultima_sexta()
+        hoje = date.today()
+        if hoje.day < 8:
+            semana_atras = hoje - timedelta(hoje.day-1)
         self.cal_inicio.setSelectedDate(semana_atras)
     
     def apply_calendar_style(self, calendar):
@@ -269,16 +284,6 @@ class MainWindow(QMainWindow):
 
         self.cmb_hotels.currentTextChanged.connect(self.on_hotel_changed)
         main_script.hotel_name_change(self.cmb_hotels.currentText())
-
-        # Dates (Antigo) ------------------------------------------------
-        '''hoje = date.today()
-        semana = hoje - timedelta(days=7)
-        lbl_date = QLabel(
-            f"Reviews de: {semana.strftime('%d/%m/%Y')} até {hoje.strftime('%d/%m/%Y')}"
-        )
-        lbl_date.setAlignment(Qt.AlignCenter)
-        lbl_date.setFont(QFont("Arial", 10))
-        layout.addWidget(lbl_date)'''
 
         # Dates ---------------------------------------------------------
         self.data_inicio = date.today() - timedelta(days=7)
