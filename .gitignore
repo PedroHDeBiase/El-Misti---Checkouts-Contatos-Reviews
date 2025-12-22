@@ -1,1 +1,3 @@
 _internal/api_key.env
+_internal/0_jsons/
+__pycache__/

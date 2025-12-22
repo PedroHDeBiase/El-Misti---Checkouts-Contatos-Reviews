@@ -9,6 +9,17 @@ import ast
 import pycountry
 
 # CLOUDBEDS
+def ultima_sexta():
+    hoje = date.today()
+    dia_da_semana = hoje.weekday()
+
+    dias_atras = (dia_da_semana - 4 + 7) % 7
+    
+    if dias_atras == 0:
+        dias_atras = 7
+
+    sexta = hoje - timedelta(days=dias_atras)
+    return sexta
 
 def hotel_name_change(name = "El Misti Hostel Ipanema"):
     global hotel 
@@ -45,7 +56,11 @@ def get_check_outs():
         raise Exception("Hotel não possui API_KEY!")
 
     hoje = date.today()
-    semana_passada = hoje - timedelta(days=7)
+    #semana_passada = hoje - timedelta(days=7)
+    semana_passada = ultima_sexta()
+
+    if hoje.day < 8:
+        semana_passada = hoje - timedelta(hoje.day-1)
 
     url = "https://api.cloudbeds.com/api/v1.3/getReservations"
 
@@ -83,6 +98,16 @@ def get_check_outs():
     del response_json["success"]
     del response_json["count"]
 
+    response_json["data"]
+    if 'total' in response_json.keys():
+        total = response_json['total']
+    else:
+        total = 0
+
+    response_json['Booking'] = 0
+    response_json['Hostel World'] = 0
+    response_json['Outros'] = total
+
     with open('./_internal/0_jsons/Checkouts - {} - {}.json'.format(hotel, hoje), 'w', encoding="utf-8") as f:
         json.dump(response_json, f, indent=4)
 
@@ -97,7 +122,7 @@ def read_reservations():
     with open('./_internal/0_jsons/Checkouts - {} - {}.json'.format(hotel, hoje), 'r', encoding="utf-8") as f:
         reservations = json.load(f)
 
-    sources = {}
+    sources = {'Booking.com': 0, 'Hostelworld': 0, 'Outros': 0}
 
     for reservation in reservations['data']:
         nome = reservation['sourceName']
@@ -172,6 +197,8 @@ def get_hospedes():
     response = requests.get(url, headers=headers, params=params)
 
     response_json = json.loads(response.text)
+    ts = datetime.now().timestamp()
+    print('{} - {}'.format(ts, response_json))
     total = response_json["total"]
 
     if total > 100:
@@ -642,7 +669,8 @@ def google(page, semana_passada):
 
 def get_dia():
     hoje = date.today()
-    semana_passada = hoje - timedelta(days=7)
+    #semana_passada = hoje - timedelta(days=7)
+    semana_passada = ultima_sexta()
     return hoje, semana_passada
 
 def get_urls(hoje, semana_passada):
@@ -731,6 +759,9 @@ def playwright():
 
             dict = hostel_world(page, semana_passada)
             reviews_dict['Hostel World'] = dict
+
+        else:
+            reviews_dict['Hostel World'] = {"Reviews": [], "Soma": 0.0, "Quantidade": 0, "Media": "0.00"}
 
         if url_dict['Google'] != None:
             url = url_dict['Google']

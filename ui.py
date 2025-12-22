@@ -322,8 +322,8 @@ class MainWindow(QMainWindow):
             b.setMaximumWidth(150)
 
         btn_row.addStretch()
-        btn_row.addWidget(self.btn_checkins)
-        btn_row.addWidget(self.btn_contatos)
+        #btn_row.addWidget(self.btn_checkins)
+        #btn_row.addWidget(self.btn_contatos)
         btn_row.addWidget(self.btn_checkouts)
         btn_row.addWidget(self.btn_scraping)
         btn_row.addWidget(self.btn_copy)
@@ -444,7 +444,7 @@ class MainWindow(QMainWindow):
         self.lbl_reservas.setAlignment(Qt.AlignLeft)
         ls.addWidget(self.lbl_reservas)
 
-        self.tabs.addTab(t_checkins, "Check-ins Futuros")
+        #self.tabs.addTab(t_checkins, "Check-ins Futuros")
         self.tabs.addTab(t_summary, "Resumo Plataformas")
         self.tabs.addTab(t_reviews, "Reviews")
 
@@ -490,7 +490,9 @@ class MainWindow(QMainWindow):
     # ------------------------------
     def contatos_filename(self):
         hotel = self.cmb_hotels.currentText().replace(":", "").replace("/", "")
-        today = date.today().strftime("%Y-%m-%d")
+        #today = date.today().strftime("%Y-%m-%d")
+        today = self.data_fim
+
         return f"./_internal/0_jsons/Contatos - {hotel} - {today}.json"
 
     def read_contatos_file(self):
@@ -502,12 +504,15 @@ class MainWindow(QMainWindow):
 
     def response_filename(self):
         hotel = self.cmb_hotels.currentText().replace(":", "").replace("/", "")
-        today = date.today().strftime("%Y-%m-%d")
+        #today = date.today().strftime("%Y-%m-%d")
+        today = self.data_fim
+
         return f"./_internal/0_jsons/Reviews - {hotel} - {today}.json"
 
     def checkouts_filename(self):
         hotel = self.cmb_hotels.currentText().replace(":", "").replace("/", "")
-        today = date.today().strftime("%Y-%m-%d")
+        #today = date.today().strftime("%Y-%m-%d")
+        today = self.data_fim
 
         return f"./_internal/0_jsons/Checkouts - {hotel} - {today}.json"
 
@@ -737,13 +742,33 @@ class MainWindow(QMainWindow):
         if os.path.exists(path):
             with open(path, 'r', encoding="utf-8") as f:
                 cks = json.load(f)
+            
+            if 'total' in cks.keys():
+                total = cks['total']
+            else:
+                total = 0
 
-            self.checkouts = {"Total": cks['total'], "Booking.com": cks['Booking'], "Hostelworld": cks['Hostel World'], "Outros": cks['Outros']}
+            if 'Booking' in cks.keys():
+                booking = cks['Booking']
+            else:
+                booking = 0
+
+            if 'Hostel World' in cks.keys():
+                hostel_world = cks['Hostel World']
+            else:
+                hostel_world = 0
+
+            if 'Outros' in cks.keys():
+                outros = cks['Outros']
+            else:
+                outros = total - hostel_world - booking
+
+            self.checkouts = {"Total": total, "Booking.com": booking, "Hostelworld": hostel_world, "Outros": outros}
         else:
             self.checkouts = {"Total": 0, "Booking.com": 0, "Hostelworld": 0, "Outros": 0}
 
         # Update UI
-        self.reload_checkins()
+        #self.reload_checkins()
         self.reload_reviews()
         self.reload_summary()
 
@@ -1013,7 +1038,7 @@ class MainWindow(QMainWindow):
             self.log_msg(f"✓ Período alterado para {inicio.strftime('%d/%m/%Y')} - {fim.strftime('%d/%m/%Y')}")
             
             # Se você quiser recarregar automaticamente:
-            # self.reload()
+            self.reload()
 
 # ENTRY POINT ----------------------------------------------------------
 def main():
